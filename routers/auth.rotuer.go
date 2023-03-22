@@ -1,0 +1,23 @@
+package routers
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"pentag.kr/BuildinAuth/controllers"
+)
+
+func auth(router *fiber.App) {
+	auth := router.Group("/auth")
+
+	auth.Post("/login", func(c *fiber.Ctx) error {
+		return controllers.Login(c)
+	})
+	auth.Post("/register", func(c *fiber.Ctx) error {
+		return controllers.Register(c)
+	})
+	auth.Get("/refresh", func(c *fiber.Ctx) error {
+		return controllers.Refresh(c)
+	})
+	auth.Get("/verify", func(c *fiber.Ctx) error {
+		return controllers.Verify(c)
+	})
+}
