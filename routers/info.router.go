@@ -9,7 +9,7 @@ import (
 func info(router *fiber.App) {
 	info := router.Group("/info")
 	info.Use(middlewares.JWTMiddlware())
-	info.Get("/", func(c *fiber.Ctx) error {
+	info.Get("/checkUser", func(c *fiber.Ctx) error {
 		return controllers.CheckUser(c)
 	})
 	info.Get("/info", func(c *fiber.Ctx) error {
