@@ -51,3 +51,4 @@ services:
       - .env
     networks:
       - back_net
+    restart: always
