@@ -17,7 +17,16 @@ func auth(router *fiber.App) {
 	auth.Get("/refresh", func(c *fiber.Ctx) error {
 		return controllers.Refresh(c)
 	})
+	auth.Get("/logout", func(c *fiber.Ctx) error {
+		return controllers.Logout(c)
+	})
 	auth.Get("/verify", func(c *fiber.Ctx) error {
 		return controllers.Verify(c)
+	})
+	auth.Post("/changePass", func(c *fiber.Ctx) error {
+		return controllers.RequestChangePassword(c)
+	})
+	auth.Get("/changePass", func(c *fiber.Ctx) error {
+		return controllers.VerifyChangePassword(c)
 	})
 }

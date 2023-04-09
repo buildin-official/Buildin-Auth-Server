@@ -12,20 +12,21 @@ import (
 	"pentag.kr/BuildinAuth/utils"
 )
 
-func Login(c *fiber.Ctx) error {
+func Login(c *fiber.Ctx) error { // 로그인 컨트롤러
 	type LoginRequest struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
-	db := database.DB
+
 	json := new(LoginRequest)
-	if err := c.BodyParser(json); err != nil || json.Email == "" || json.Password == "" {
+	if err := c.BodyParser(json); err != nil || json.Email == "" || json.Password == "" { // json을 구조체로 파싱하고, 이메일과 비밀번호가 비어있는지 확인
 		return c.Status(400).JSON(fiber.Map{
 			"code":    400,
 			"message": "Invalid JSON",
 		})
 	}
 
+	db := database.DB
 	found := models.User{}
 	query := models.User{Email: json.Email}
 	err := db.First(&found, &query).Error
@@ -65,7 +66,7 @@ func Register(c *fiber.Ctx) error {
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required,min=8,max=30,excludesall=;"`
 	}
-	db := database.DB
+
 	json := new(RegisterRequest)
 	if err := c.BodyParser(json); err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -80,12 +81,14 @@ func Register(c *fiber.Ctx) error {
 		})
 	}
 
+	db := database.DB
+
 	foundUnvalidatedUser := models.UnvalidatedUser{}
 	unvalidatedUserquery := models.UnvalidatedUser{Email: json.Email}
 	if err := db.First(&foundUnvalidatedUser, &unvalidatedUserquery).Error; err != gorm.ErrRecordNotFound {
 		return c.Status(409).JSON(fiber.Map{
-			"code":    409,
-			"message": "User already exists",
+			"code":    410,
+			"message": "Already registered, but not verified",
 		})
 	}
 
@@ -121,7 +124,8 @@ func Register(c *fiber.Ctx) error {
 
 func Refresh(c *fiber.Ctx) error {
 	refreshToken := c.Query("refresh-token", "")
-	if refreshToken == "" {
+	_, err := guuid.Parse(refreshToken)
+	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"code":    400,
 			"message": "Invalid JSON",
@@ -148,6 +152,22 @@ func Refresh(c *fiber.Ctx) error {
 	})
 }
 
+func Logout(c *fiber.Ctx) error {
+	refreshToken := c.Query("refresh-token", "")
+	_, err := guuid.Parse(refreshToken)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"code":    400,
+			"message": "Invalid JSON",
+		})
+	}
+	database.RDB.Del(c.Context(), refreshToken)
+	return c.JSON(fiber.Map{
+		"code":    200,
+		"message": "sucess",
+	})
+}
+
 func Verify(c *fiber.Ctx) error {
 	token := c.Query("token", "")
 	userUUID, err := guuid.Parse(token)
@@ -170,6 +190,94 @@ func Verify(c *fiber.Ctx) error {
 	newUser := models.User{ID: newUserID, Email: foundUnvalidatedUser.Email, Password: foundUnvalidatedUser.Password}
 	db.Create(&newUser)
 	db.Delete(&foundUnvalidatedUser)
+	return c.JSON(fiber.Map{
+		"code":    200,
+		"message": "sucess",
+	})
+}
+
+func RequestChangePassword(c *fiber.Ctx) error {
+	type RequestChangePasswordRequest struct {
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required,min=8,max=30,excludesall=;"`
+	}
+
+	json := new(RequestChangePasswordRequest)
+	if err := c.BodyParser(json); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"code":    400,
+			"message": "Invalid JSON",
+		})
+	}
+	if err := utils.ValidateStruct(json); err != nil || !utils.VerifyPassword(json.Password) {
+		return c.Status(400).JSON(fiber.Map{
+			"code":    400,
+			"message": "Invalid JSON",
+		})
+	}
+
+	db := database.DB
+
+	foundUser := models.User{}
+	Userquery := models.User{Email: json.Email}
+	if err := db.First(&foundUser, &Userquery).Error; err == gorm.ErrRecordNotFound {
+		return c.Status(200).JSON(fiber.Map{
+			"code":    200,
+			"message": "success",
+		})
+	}
+
+	changePasswordCode := guuid.New()
+	hashedPassword := utils.HashPassword(json.Password)
+
+	newChangePasswordObject := models.ChangePasswordCode{ID: changePasswordCode, UserID: foundUser.ID, Password: hashedPassword}
+	db.Create(&newChangePasswordObject)
+
+	changePasswordEmail := utils.Mail{}
+
+	err := changePasswordEmail.SendChangePasswordEmail(json.Email, changePasswordCode.String())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"code":    500,
+			"message": "Internal Server Error",
+		})
+	}
+	return c.JSON(fiber.Map{
+		"code":    200,
+		"message": "sucess",
+	})
+
+}
+
+func VerifyChangePassword(c *fiber.Ctx) error {
+	token := c.Query("token", "")
+	changePasswordCode, err := guuid.Parse(token)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"code":    400,
+			"message": "Invalid Qurey or Token",
+		})
+	}
+	db := database.DB
+	foundChangePasswordCode := models.ChangePasswordCode{}
+	changePasswordCodeQuery := models.ChangePasswordCode{ID: changePasswordCode}
+	if err := db.First(&foundChangePasswordCode, &changePasswordCodeQuery).Error; err == gorm.ErrRecordNotFound {
+		return c.Status(400).JSON(fiber.Map{
+			"code":    400,
+			"message": "Invalid Qurey or Token",
+		})
+	}
+	foundUser := models.User{}
+	userQuery := models.User{ID: foundChangePasswordCode.UserID}
+	if err := db.First(&foundUser, &userQuery).Error; err == gorm.ErrRecordNotFound {
+		return c.Status(400).JSON(fiber.Map{
+			"code":    500,
+			"message": "Internal Server Error",
+		})
+	}
+	foundUser.Password = foundChangePasswordCode.Password
+	db.Save(&foundUser)
+	db.Delete(&foundChangePasswordCode)
 	return c.JSON(fiber.Map{
 		"code":    200,
 		"message": "sucess",

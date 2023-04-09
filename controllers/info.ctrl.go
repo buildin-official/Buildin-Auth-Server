@@ -8,7 +8,7 @@ import (
 	"pentag.kr/BuildinAuth/utils"
 )
 
-func GetInfo(c *fiber.Ctx) error {
+func CheckUser(c *fiber.Ctx) error { // 유저가 있는지 확인하는 컨트롤러
 	jwtClaims := c.Locals("jwtClaims").(utils.AuthTokenClaims)
 	return c.JSON(fiber.Map{
 		"code":    200,
@@ -17,8 +17,7 @@ func GetInfo(c *fiber.Ctx) error {
 	})
 }
 
-func GetEmail(c *fiber.Ctx) error {
-	// return Email and User ID
+func GetInfo(c *fiber.Ctx) error { // 유저 정보를 가져오는 컨트롤러
 	jwtClaims := c.Locals("jwtClaims").(utils.AuthTokenClaims)
 	db := database.DB
 	user := models.User{}

@@ -21,7 +21,11 @@ func ConnectDB() {
 	if err != nil {
 		panic(err)
 	}
-	err = DB.AutoMigrate(&models.User{}, &models.UnvalidatedUser{})
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.UnvalidatedUser{},
+		&models.ChangePasswordCode{},
+	)
 	if err != nil {
 		panic(err)
 	}

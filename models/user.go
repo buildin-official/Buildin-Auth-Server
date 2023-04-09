@@ -19,3 +19,10 @@ type UnvalidatedUser struct {
 	Password  string     `json:"-"`
 	CreatedAt time.Time  `gorm:"autoCreateTime" json:"-" `
 }
+
+type ChangePasswordCode struct {
+	ID        guuid.UUID `gorm:"primaryKey" json:"-"`
+	UserID    guuid.UUID `gorm:"unique" json:"-"`
+	Password  string     `json:"-"`
+	CreatedAt time.Time  `gorm:"autoCreateTime" json:"-" `
+}

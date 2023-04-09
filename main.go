@@ -13,7 +13,10 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(configs.Config.WAS.PROCESS_NUM)
-	app := fiber.New()
+
+	app := fiber.New(fiber.Config{
+		Prefork: true,
+	})
 
 	database.ConnectDB()
 	database.ConnectRedis()

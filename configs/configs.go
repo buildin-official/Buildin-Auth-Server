@@ -5,15 +5,15 @@ import (
 	"strconv"
 )
 
-type WASConfig struct {
+type WASConfig struct { // 인증서버 환경변수 구조체
 	Host        string
 	Port        string
 	JWT_SECRET  string
 	JWT_EXPIRE  int
-	PROCESS_NUM int
+	PROCESS_NUM int // gorutine에서 사용할 프로세스 개수
 }
 
-type DBConfig struct {
+type DBConfig struct { //Postgres 환경변수 구조체
 	Host     string
 	Port     int
 	User     string
@@ -21,7 +21,7 @@ type DBConfig struct {
 	Database string
 }
 
-type RedisConfig struct {
+type RedisConfig struct { // Redis 환경변수 구조체
 	Host     string
 	Port     int
 	Password string
@@ -33,25 +33,25 @@ type SMTPConfig struct {
 	Port       int
 	User       string
 	Pass       string
-	Sender     string
-	SenderName string
+	Sender     string // 보내는 사람의 이메일 주소
+	SenderName string // 보내는 사람의 이름
 }
 
-type MainConfig struct {
+type MainConfig struct { // 중앙 구조체
 	WAS   WASConfig
 	DB    DBConfig
 	Redis RedisConfig
 	SMTP  SMTPConfig
 }
 
-func getEnv_s(key string) string {
+func getEnv_s(key string) string { // 환경변수를 가져오고 없으면 에러를 발생시키는 함수
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
 	panic("Environment variable " + key + " not found")
 }
 
-func getAllEnv() MainConfig {
+func getAllEnv() MainConfig { // 모든 환경변수를 가져오는 함수
 	var err error
 	jwtExpire, err := strconv.Atoi(getEnv_s("JWT_EXPIRE"))
 	if err != nil {
@@ -108,4 +108,4 @@ func getAllEnv() MainConfig {
 	}
 }
 
-var Config = getAllEnv()
+var Config = getAllEnv() // 환경변수 객체
