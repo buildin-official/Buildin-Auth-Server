@@ -15,4 +15,7 @@ func info(router *fiber.App) {
 	info.Get("/info", func(c *fiber.Ctx) error {
 		return controllers.GetInfo(c)
 	})
+	info.Post("/changeUsername", func(c *fiber.Ctx) error {
+		return controllers.ChangeUsername(c)
+	})
 }

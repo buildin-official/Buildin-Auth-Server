@@ -63,6 +63,7 @@ func Login(c *fiber.Ctx) error { // 로그인 컨트롤러
 
 func Register(c *fiber.Ctx) error {
 	type RegisterRequest struct {
+		Username string `json:"username" validate:"required,min=1,max=20,excludesall=;"`
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required,min=8,max=30,excludesall=;"`
 	}
@@ -113,7 +114,7 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	hashedPassword := utils.HashPassword(json.Password)
-	newUnvalidatedUser := models.UnvalidatedUser{ID: userTempID, Email: json.Email, Password: hashedPassword}
+	newUnvalidatedUser := models.UnvalidatedUser{ID: userTempID, Email: json.Email, Password: hashedPassword, Username: json.Username}
 	db.Create(&newUnvalidatedUser)
 
 	return c.JSON(fiber.Map{
@@ -187,7 +188,7 @@ func Verify(c *fiber.Ctx) error {
 		})
 	}
 	newUserID := guuid.New()
-	newUser := models.User{ID: newUserID, Email: foundUnvalidatedUser.Email, Password: foundUnvalidatedUser.Password}
+	newUser := models.User{ID: newUserID, Email: foundUnvalidatedUser.Email, Password: foundUnvalidatedUser.Password, Username: foundUnvalidatedUser.Username}
 	db.Create(&newUser)
 	db.Delete(&foundUnvalidatedUser)
 	return c.JSON(fiber.Map{
