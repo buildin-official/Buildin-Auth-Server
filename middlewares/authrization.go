@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -15,7 +14,9 @@ func JWTMiddlware() fiber.Handler {
 
 		authHeader := c.Get("Authorization", "")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			return errors.New("Unauthorized")
+			return c.Status(401).JSON(fiber.Map{
+				"error": "Bad Authorization header",
+			})
 		}
 
 		accessToken := strings.TrimPrefix(authHeader, "Bearer ")
@@ -28,6 +29,8 @@ func JWTMiddlware() fiber.Handler {
 			return c.Next()
 		}
 
-		return errors.New("Unauthorized")
+		return c.Status(401).JSON(fiber.Map{
+			"error": "Bad Access Token",
+		})
 	}
 }
