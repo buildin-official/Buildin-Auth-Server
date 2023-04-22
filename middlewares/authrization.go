@@ -29,7 +29,7 @@ func JWTMiddlware() fiber.Handler {
 			return c.Next()
 		}
 
-		return c.Status(401).JSON(fiber.Map{
+		return c.Status(498).JSON(fiber.Map{
 			"error": "Bad Access Token",
 		})
 	}
