@@ -1,0 +1,32 @@
+image: docker:latest
+
+variables:
+  IMAGE_NAME: $DOCKER_PRIVATE_HOST/buildin-auth:latest
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  - deploy
+
+build-job:       # This job runs in the build stage, which runs first.
+  stage: build
+  script:
+    - docker build . -t $IMAGE_NAME
+    - docker login -u $DOCKER_PRIVATE_USER -p $DOCKER_PRIVATE_PASSWORD $DOCKER_PRIVATE_HOST
+    - docker push $IMAGE_NAME
+
+deploy-job:
+  stage: deploy
+  only:
+    - main
+  before_script:
+    - 'which ssh-agent || (apk update && apk add openssh-client)'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -p $PROD_SERVER_PORT $PROD_SERVER_IP >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - ssh $PROD_SERVER_USER@$PROD_SERVER_IP -p $PROD_SERVER_PORT "sudo docker login \"${DOCKER_PRIVATE_HOST}\" -u \"${DOCKER_PRIVATE_USER}\" -p \"${DOCKER_PRIVATE_PASSWORD}\" && sudo docker pull $IMAGE_NAME && cd ~/docker-compose/Buildin-Auth-Server && git pull gitlab main && sudo docker-compose up -d
+
+  when: manual
