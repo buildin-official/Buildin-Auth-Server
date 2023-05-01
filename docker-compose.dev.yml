@@ -1,0 +1,55 @@
+version: "3.7"
+
+networks:
+  main_net:
+    name: main_main_net
+    external: true
+  back_net:
+    driver: bridge
+
+services:
+  buildin-auth:
+    container_name: buildin-auth
+    image: buildin-auth:latest
+    networks:
+      - main_net
+      - back_net
+    environment:
+      - DOPPLER_TOKEN
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+    restart: always
+  postgres:
+    container_name: ${POSTGRES_HOST}
+    image: postgres:alpine
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=${TZ}
+    restart: always
+    networks:
+      - back_net
+  redis:
+    image: redis:alpine
+    container_name: ${REDIS_HOST}
+    command: redis-server --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
+    labels:
+      - "name=redis"
+      - "mode=standalone"
+    volumes:
+      - ./redis/data:/data
+      - ./redis/conf/redis.conf:/usr/local/conf/redis.conf
+    ports:
+      - 6379:6379
+    environment:
+      - TZ=${TZ}
+    networks:
+      - back_net
+    restart: always
