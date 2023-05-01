@@ -5,6 +5,9 @@ services:
 
 variables:
   IMAGE_NAME: $DOCKER_PRIVATE_HOST/buildin-auth:latest
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
 
 stages:          # List of stages for jobs, and their order of execution
   - build
