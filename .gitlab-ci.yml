@@ -1,5 +1,8 @@
 image: docker:latest
 
+services:
+  - docker:dind
+
 variables:
   IMAGE_NAME: $DOCKER_PRIVATE_HOST/buildin-auth:latest
 
