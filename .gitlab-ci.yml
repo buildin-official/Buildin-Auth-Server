@@ -10,18 +10,10 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 stages:          # List of stages for jobs, and their order of execution
-  - build-test
-  - deploy
-
-build-job:       # This job runs in the build stage, which runs first.
-  stage: build-test
-  before_script:
-    - docker info
-  script:
-    - docker build . -t $IMAGE_NAME
+  - test-and-deploy
 
 deploy-job:
-  stage: deploy
+  stage: test-and-deploy
   only:
     - main
   before_script:
@@ -30,9 +22,10 @@ deploy-job:
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - ssh-keyscan -p $PROD_SERVER_PORT $PROD_SERVER_IP >> ~/.ssh/known_hosts
+    - ssh-keyscan -p $PROD_SERVER_PORT -H $PROD_SERVER_IP >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
+    - docker build . -t $IMAGE_NAME
     - ssh $PROD_SERVER_USER@$PROD_SERVER_IP -p $PROD_SERVER_PORT "cd ~/docker-compose/Buildin-Auth-Server && git pull gitlab main && sudo doppler run --token='$DOPPLER_TOKEN' -- docker compose -f docker-compose.prod.yml up -d --build"
 
   when: manual
