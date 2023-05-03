@@ -9,6 +9,7 @@ networks:
 
 services:
   buildin-auth:
+    build: ./
     container_name: buildin-auth
     image: buildin-auth:latest
     networks:
