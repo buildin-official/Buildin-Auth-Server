@@ -19,7 +19,6 @@ func main() {
 	})
 
 	database.ConnectDB()
-	database.ConnectRedis()
 
 	routers.Initialize(app)
 	log.Fatal(app.Listen(":" + configs.Config.WAS.Port))

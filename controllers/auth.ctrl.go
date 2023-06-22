@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"time"
-
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 
@@ -43,9 +41,12 @@ func Login(c *fiber.Ctx) error { // 로그인 컨트롤러
 			"message": "Invalid Password",
 		})
 	}
-	newUuid, _ := guuid.NewRandom()
-	refreshToken := newUuid.String()
-	database.RDB.SetEx(c.Context(), refreshToken, found.ID.String(), time.Hour*24*7)
+	newUUID, _ := guuid.NewRandom()
+	newRefreshToken := models.RefreshToken{
+		ID:     newUUID,
+		UserID: found.ID,
+	}
+	db.Create(&newRefreshToken)
 	accessToken, err := utils.CreateToken(found.ID.String())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
@@ -57,7 +58,7 @@ func Login(c *fiber.Ctx) error { // 로그인 컨트롤러
 		"code":          200,
 		"message":       "sucess",
 		"access-token":  accessToken,
-		"refresh-token": refreshToken,
+		"refresh-token": newUUID.String(),
 	})
 }
 
@@ -124,22 +125,17 @@ func Register(c *fiber.Ctx) error {
 }
 
 func Refresh(c *fiber.Ctx) error {
-	refreshToken := c.Query("refresh-token", "")
-	_, err := guuid.Parse(refreshToken)
+	refreshTokenString := c.Query("refresh-token", "")
+	refreshTokenUUID, err := guuid.Parse(refreshTokenString)
+	db := database.DB
+	err, refreshToken := models.FindRefreshToken(db, refreshTokenUUID)
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{
-			"code":    400,
-			"message": "Invalid JSON",
+		return c.Status(404).JSON(fiber.Map{
+			"code":    404,
+			"message": "Refresh Token not found",
 		})
 	}
-	userId, err := database.RDB.Get(c.Context(), refreshToken).Result()
-	if err != nil {
-		return c.Status(401).JSON(fiber.Map{
-			"code":    401,
-			"message": "Unauthorized",
-		})
-	}
-	accessToken, err := utils.CreateToken(userId)
+	accessToken, err := utils.CreateToken(refreshToken.UserID.String())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"code":    500,
@@ -154,15 +150,18 @@ func Refresh(c *fiber.Ctx) error {
 }
 
 func Logout(c *fiber.Ctx) error {
-	refreshToken := c.Query("refresh-token", "")
-	_, err := guuid.Parse(refreshToken)
+	refreshTokenString := c.Query("refresh-token", "")
+	db := database.DB
+	refreshTokenUUID, err := guuid.Parse(refreshTokenString)
+	err, refreshToken := models.FindRefreshToken(db, refreshTokenUUID)
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{
-			"code":    400,
-			"message": "Invalid JSON",
+		return c.Status(404).JSON(fiber.Map{
+			"code":    404,
+			"message": "Refresh Token not found",
 		})
 	}
-	database.RDB.Del(c.Context(), refreshToken)
+	db.Delete(&refreshToken)
+
 	return c.JSON(fiber.Map{
 		"code":    200,
 		"message": "sucess",

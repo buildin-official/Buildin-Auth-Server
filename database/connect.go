@@ -1,10 +1,8 @@
 package database
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -25,19 +23,9 @@ func ConnectDB() {
 		&models.User{},
 		&models.UnvalidatedUser{},
 		&models.ChangePasswordCode{},
+		&models.RefreshToken{},
 	)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func ConnectRedis() {
-	redisConfig := configs.Config.Redis
-	ctx := context.Background()
-	RDB = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port),
-		Password: redisConfig.Password,
-		DB:       0, // use default DB
-	})
-	RDB.Ping(ctx)
 }

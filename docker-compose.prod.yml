@@ -37,20 +37,3 @@ services:
     restart: always
     networks:
       - back_net
-  redis:
-    image: redis:alpine
-    container_name: ${REDIS_HOST}
-    command: redis-server --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
-    labels:
-      - "name=redis"
-      - "mode=standalone"
-    volumes:
-      - ./redis/data:/data
-      - ./redis/conf/redis.conf:/usr/local/conf/redis.conf
-    expose:
-      - 6379
-    environment:
-      - TZ=${TZ}
-    networks:
-      - back_net
-    restart: always
