@@ -21,13 +21,6 @@ type DBConfig struct { //Postgres 환경변수 구조체
 	Database string
 }
 
-type RedisConfig struct { // Redis 환경변수 구조체
-	Host     string
-	Port     int
-	Password string
-	DB       int
-}
-
 type SMTPConfig struct {
 	Host       string
 	Port       int
@@ -38,10 +31,9 @@ type SMTPConfig struct {
 }
 
 type MainConfig struct { // 중앙 구조체
-	WAS   WASConfig
-	DB    DBConfig
-	Redis RedisConfig
-	SMTP  SMTPConfig
+	WAS  WASConfig
+	DB   DBConfig
+	SMTP SMTPConfig
 }
 
 func getEnv_s(key string) string { // 환경변수를 가져오고 없으면 에러를 발생시키는 함수
@@ -62,10 +54,6 @@ func getAllEnv() MainConfig { // 모든 환경변수를 가져오는 함수
 
 	if err != nil {
 		panic("Environment variable DB_PORT is not a number")
-	}
-	redisPort, err := strconv.Atoi(getEnv_s("REDIS_PORT"))
-	if err != nil {
-		panic("Environment variable REDIS_PORT is not a number")
 	}
 	smtpPort, err := strconv.Atoi(getEnv_s("SMTP_PORT"))
 	if err != nil {
@@ -90,12 +78,6 @@ func getAllEnv() MainConfig { // 모든 환경변수를 가져오는 함수
 			User:     getEnv_s("POSTGRES_USER"),
 			Pass:     getEnv_s("POSTGRES_PASSWORD"),
 			Database: getEnv_s("POSTGRES_DB"),
-		},
-		Redis: RedisConfig{
-			Host:     getEnv_s("REDIS_HOST"),
-			Port:     redisPort,
-			Password: getEnv_s("REDIS_PASSWORD"),
-			DB:       0,
 		},
 		SMTP: SMTPConfig{
 			Host:       getEnv_s("SMTP_HOST"),
