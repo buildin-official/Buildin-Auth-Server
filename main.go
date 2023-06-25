@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	"pentag.kr/BuildinAuth/configs"
 	"pentag.kr/BuildinAuth/database"
@@ -17,6 +18,12 @@ func main() {
 	app := fiber.New(fiber.Config{
 		Prefork: true,
 	})
+	//CORS Setting
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "https://buildin.kr",
+		AllowHeaders: "*",
+		AllowMethods: "*",
+	}))
 
 	database.ConnectDB()
 
