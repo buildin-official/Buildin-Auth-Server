@@ -26,5 +26,3 @@ deploy-job:
   script:
     - docker build -t buildin-auth-server:latest .
     - ssh $PROD_SERVER_USER@$PROD_SERVER_HOST -p $PROD_SERVER_PORT "cd ~/docker-compose/Buildin-Auth-Server && git pull gitlab main && sudo doppler run --token='$DOPPLER_TOKEN' -- docker compose -f docker-compose.prod.yml up -d --build"
-
-  when: manual
