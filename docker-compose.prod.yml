@@ -9,9 +9,8 @@ networks:
 
 services:
   buildin-auth:
-    build: ./
     container_name: buildin-auth
-    image: buildin-auth:latest
+    image: implude/buildin-auth:latest
     networks:
       - main_net
       - back_net

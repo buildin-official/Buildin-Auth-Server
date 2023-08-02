@@ -1,4 +1,3 @@
 postgres/
-redis
 .env 
 .DS_Store
