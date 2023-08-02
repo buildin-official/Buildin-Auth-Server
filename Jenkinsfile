@@ -13,24 +13,16 @@ pipeline {
 				checkout scm
 			}
 		}
-		stage("Build") {
-      steps {
-        sh "docker buildx build --platform linux/amd64 --tag buildin-auth:latest ."
-
-      }
-		}
-	  stage("Tag and Push") {
+		stage("Build and Push") {
 			steps {
-        withCredentials([[$class: 'UsernamePasswordMultiBinding',
-								          credentialsId: 'docker-hub',
-								          usernameVariable: 'DOCKER_USER_ID',
-								          passwordVariable: 'DOCKER_USER_PASSWORD'
+				withCredentials([[$class: 'UsernamePasswordMultiBinding',
+								credentialsId: 'docker-hub',
+								usernameVariable: 'DOCKER_USER_ID',
+								passwordVariable: 'DOCKER_USER_PASSWORD'
 				]]){
 					sh 'docker login -u $DOCKER_USER_ID -p $DOCKER_USER_PASSWORD'
-					sh 'docker tag buildin-auth:latest $DOCKER_USER_ID/buildin-auth:$BUILD_NUMBER'
-					sh 'docker push $DOCKER_USER_ID/buildin-auth:$BUILD_NUMBER'
-					sh 'docker tag $DOCKER_USER_ID/buildin-auth:$BUILD_NUMBER $DOCKER_USER_ID/buildin-auth:latest'
-					sh 'docker push $DOCKER_USER_ID/buildin-auth:latest'
+					sh 'docker buildx build ---platform linux/amd64,linux/arm64,linux/arm/v7 --tag $DOCKER_USER_ID/buildin-auth::$BUILD_NUMBER --push .'
+					sh 'docker buildx build ---platform linux/amd64,linux/arm64,linux/arm/v7 --tag $DOCKER_USER_ID/buildin-auth::latest --push .'
 				}	
 			}
 		}
@@ -44,14 +36,14 @@ pipeline {
 						sshUserPrivateKey(credentialsId: 'buildin-server', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName'),
 					]) {
 						sshagent (credentials: ['buildin-server']) {
-                sh '''
-								ssh -o StrictHostKeyChecking=no -p $PORT $userName@$HOST '
-								cd ~/docker-compose/Buildin-Auth-Server
-								git pull origin main
-								docker pull implude/buildin-auth:latest
-								doppler run -- docker compose -f docker-compose.prod.yml up -d
-								'
-								'''
+                			sh '''
+							ssh -o StrictHostKeyChecking=no -p $PORT $userName@$HOST '
+							cd ~/docker-compose/Buildin-Auth-Server
+							git pull origin main
+							docker pull implude/buildin-auth:latest
+							doppler run -- docker compose -f docker-compose.prod.yml up -d
+							'
+							'''
 						}
 					}
 				}
