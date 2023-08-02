@@ -21,8 +21,8 @@ pipeline {
 								passwordVariable: 'DOCKER_USER_PASSWORD'
 				]]){
 					sh 'docker login -u $DOCKER_USER_ID -p $DOCKER_USER_PASSWORD'
-					sh 'docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --tag $DOCKER_USER_ID/buildin-auth::$BUILD_NUMBER --push .'
-					sh 'docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --tag $DOCKER_USER_ID/buildin-auth::latest --push .'
+					sh 'docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --tag $DOCKER_USER_ID/buildin-auth:$BUILD_NUMBER --push .'
+					sh 'docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --tag $DOCKER_USER_ID/buildin-auth:latest --push .'
 				}	
 			}
 		}
