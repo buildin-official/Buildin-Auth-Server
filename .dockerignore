@@ -1,0 +1,9 @@
+postgres/
+.env 
+.DS_Store
+Jenkinsfile
+.gitignore
+.git
+docker-compose.dev.yml
+docker-compose.prod.yml
+.vscode

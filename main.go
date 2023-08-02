@@ -15,9 +15,7 @@ import (
 func main() {
 	runtime.GOMAXPROCS(configs.Config.WAS.PROCESS_NUM)
 
-	app := fiber.New(fiber.Config{
-		Prefork: true,
-	})
+	app := fiber.New(fiber.Config{})
 	//CORS Setting
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "https://buildin.kr",
